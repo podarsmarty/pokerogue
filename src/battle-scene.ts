@@ -63,7 +63,7 @@ import { STARTING_WAVE_OVERRIDE, OPP_SPECIES_OVERRIDE, SEED_OVERRIDE, STARTING_B
 import {InputsController} from "./inputs-controller";
 import {UiInputs} from "./ui-inputs";
 
-export const bypassLogin = import.meta.env.VITE_BYPASS_LOGIN === "1";
+export const bypassLogin = true;
 
 const DEBUG_RNG = false;
 
