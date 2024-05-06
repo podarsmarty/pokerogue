@@ -22,7 +22,7 @@ jobs:
         git config --global user.name "GitHub Actions"
         git remote add upstream https://github.com/pagefaultgames/pokerogue.git
         git fetch upstream
-        git merge --allow-unrelated-histories upstream/main
+        git merge --allow-unrelated-histories upstream/main --strategy-option theirs
 
     - name: Cherry-pick specific commit
       run: |
