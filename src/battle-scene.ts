@@ -85,7 +85,7 @@ import { ToggleDoublePositionPhase } from "./phases/toggle-double-position-phase
 import { TurnInitPhase } from "./phases/turn-init-phase";
 import { ShopCursorTarget } from "./enums/shop-cursor-target";
 
-export const bypassLogin = import.meta.env.VITE_BYPASS_LOGIN === "1";
+export const bypassLogin = true;
 
 const DEBUG_RNG = false;
 
