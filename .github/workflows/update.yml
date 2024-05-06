@@ -7,26 +7,19 @@ on:
     branches: [main]
 
 jobs:
-  merge_and_build:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout forked repository
+    - name: Checkout original repository
       uses: actions/checkout@v2
       with:
+        repository: pagefaultgames/pokerogue
         ref: main
 
-    - name: Merge changes from original repository
+    - name: Modify src/battle-scene.ts
       run: |
-        git config --global user.email "actions@github.com"
-        git config --global user.name "GitHub Actions"
-        git remote add upstream https://github.com/pagefaultgames/pokerogue.git
-        git fetch upstream
-        git merge --allow-unrelated-histories upstream/main --strategy-option theirs
-
-    - name: Cherry-pick specific commit
-      run: |
-        git cherry-pick f01f64fa1775c81f36cc8e771ec8e22b9dc8d6d6
+        sed -i 's/export const bypassLogin = import.meta.env.VITE_BYPASS_LOGIN === "1";/export const bypassLogin = true;/' src/battle-scene.ts
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
@@ -77,7 +70,3 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-
-    - name: Push changes to forked repository
-      run: |
-        git push origin updated-main
