@@ -23,27 +23,7 @@ jobs:
 
     - name: Modify index.html
       run: |
-        python -c '
-        import re
-    
-        with open("index.html", "r") as file:
-          content = file.read()
-    
-        content = re.sub(
-          r"""<script type="module" crossorigin src="/assets/index-[0-9a-f]{8}\.js"></script>""",
-          r"""<script type="module" crossorigin src="./assets/index-\g<0>.js"></script>""",
-          content
-        )
-    
-        content = re.sub(
-          r"""<link rel="stylesheet" href="/assets/index-[0-9a-f]{8}\.css">""",
-          r"""<link rel="stylesheet" href="./assets/index-\g<0>.css">""",
-          content
-        )
-    
-        with open("index.html", "w") as file:
-          file.write(content)
-        '
+        sed -i 's#/assets/index#./assets/index#g' index.html
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
