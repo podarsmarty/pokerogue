@@ -21,10 +21,6 @@ jobs:
       run: |
         sed -i 's/export const bypassLogin = import.meta.env.VITE_BYPASS_LOGIN === "1";/export const bypassLogin = true;/' src/battle-scene.ts
 
-    - name: Modify index.html
-      run: |
-        sed -i 's/\/assets\/index/\.\/assets\/index/g' index.html
-
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
@@ -35,6 +31,10 @@ jobs:
 
     - name: Build game
       run: npm run build
+
+    - name: Modify index.html
+      run: |
+        sed -i 's#/assets/index#./assets/index#g' dist/index.html
 
     - name: Package game
       run: |
