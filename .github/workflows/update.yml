@@ -23,8 +23,15 @@ jobs:
 
     - name: Modify index.html
       run: |
-        sed -i 's|src="/assets/index-[^"]*"|src="./assets/index-|g' index.html
-        sed -i 's|href="/assets/index-[^"]*"|href="./assets/index-|g' index.html
+        node -e "
+          const fs = require('fs');
+          const path = require('path');
+          const indexPath = path.join(__dirname, 'index.html');
+          let indexContent = fs.readFileSync(indexPath, 'utf-8');
+          indexContent = indexContent.replace(/src=\"\/assets\/index-[^\"]*\"/g, 'src=\"./assets/index-');
+          indexContent = indexContent.replace(/href=\"\/assets\/index-[^\"]*\"/g, 'href=\"./assets/index-');
+          fs.writeFileSync(indexPath, indexContent);
+        "
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
