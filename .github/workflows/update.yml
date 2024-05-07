@@ -20,18 +20,10 @@ jobs:
     - name: Modify src/battle-scene.ts
       run: |
         sed -i 's/export const bypassLogin = import.meta.env.VITE_BYPASS_LOGIN === "1";/export const bypassLogin = true;/' src/battle-scene.ts
-
+    
     - name: Modify index.html
       run: |
-        node -e "
-          const fs = require('fs');
-          const path = require('path');
-          const indexPath = path.join(__dirname, 'index.html');
-          let indexContent = fs.readFileSync(indexPath, 'utf-8');
-          indexContent = indexContent.replace(/src=\"\/assets\/index-[^\"]*\"/g, 'src=\"./assets/index-');
-          indexContent = indexContent.replace(/href=\"\/assets\/index-[^\"]*\"/g, 'href=\"./assets/index-');
-          fs.writeFileSync(indexPath, indexContent);
-        "
+        sed -i 's|/assets/index|./assets/index|g' index.html
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
