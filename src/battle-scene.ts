@@ -987,6 +987,8 @@ export default class BattleScene extends SceneBase {
 			case Species.SAWSBUCK:
 			case Species.FROAKIE:
 			case Species.FROGADIER:
+			case Species.SCATTERBUG:
+			case Species.SPEWPA:
 			case Species.VIVILLON:
 			case Species.FLABEBE:
 			case Species.FLOETTE:
@@ -1971,6 +1973,7 @@ export default class BattleScene extends SceneBase {
 	
 	updateGameInfo(): void {
 		const gameInfo = {
+			playTime: this.sessionPlayTime ? this.sessionPlayTime : 0,
 			gameMode: this.currentBattle ? this.gameMode.getName() : 'Title',
 			biome: this.currentBattle ? getBiomeName(this.arena.biomeType) : '',
 			wave: this.currentBattle?.waveIndex || 0,
