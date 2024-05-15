@@ -38,7 +38,7 @@ jobs:
       run: |
         latest_commit="${{ steps.latest_commit.outputs.latest_commit }}"
         current_release="${{ steps.get_release.outputs.current_release }}"
-        if [ "Release $latest_commit" == "$current_release" ]; then
+        if [ "$latest_commit" == "$current_release" ]; then
           echo "::set-output name=stop_build::true"
         else
           echo "::set-output name=stop_build::false"
@@ -78,9 +78,10 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       with:
-        tag_name: ${{ steps.latest_commit.outputs.latest_commit }}
-        release_name: Release ${{ steps.latest_commit.outputs.latest_commit }}
+        tag_name: release-${{ steps.latest_commit.outputs.latest_commit }}
+        release_name: ${{ steps.latest_commit.outputs.latest_commit }}
         draft: false
+        prerelease: false
 
     - name: Upload Release Asset
       id: upload-release-asset
