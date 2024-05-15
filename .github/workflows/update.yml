@@ -100,6 +100,11 @@ jobs:
         asset_name: game.zip
         asset_content_type: application/zip
 
+    # Introduce a wait step to allow time for the release to be processed
+    - name: Wait for release processing
+      if: steps.check_match.outputs.stop_build != 'true'
+      run: sleep 10  # Adjust the sleep duration as needed
+
     - name: Delete old releases
       if: steps.check_match.outputs.stop_build != 'true'
       uses: dev-drprasad/delete-older-releases@v0.2.0
