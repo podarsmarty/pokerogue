@@ -88,11 +88,6 @@ jobs:
         draft: false
         prerelease: false
 
-    # Update Git tag to mark the newly created release as the latest
-    - name: Update Git tag
-      if: steps.check_match.outputs.stop_build != 'true'
-      run: git tag -fa release-${{ steps.latest_commit.outputs.latest_commit }} -m "Update latest release" && git push origin --tags
-
     - name: Upload Release Asset
       if: steps.check_match.outputs.stop_build != 'true'
       id: upload-release-asset
