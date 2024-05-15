@@ -102,7 +102,7 @@ jobs:
 
     - name: Delete old releases
       if: steps.check_match.outputs.stop_build != 'true'
-      uses: dev-drprasad/delete-older-releases@v0.2.0
+      uses: dev-drprasad/delete-older-releases@v0.3.3
       with:
         keep_latest: 1
         delete_tags: true
