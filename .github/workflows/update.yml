@@ -26,7 +26,8 @@ jobs:
     - name: Get current draft release
       id: get_draft_release
       run: |
-        response=$(curl -s -H "Authorization: token $RELEASE_TOKEN" "https://api.github.com/repos/pagefaultgames/pokerogue/releases?per_page=1&draft=true")
+        response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/pagefaultgames/pokerogue/releases?per_page=1&draft=true")
+        echo "Response from API: $response"
         current_release=$(echo "$response" | jq -r '.[0].name')
         echo "::set-output name=current_release::$current_release"
 
