@@ -79,8 +79,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       with:
         tag_name: ${{ steps.latest_commit.outputs.latest_commit }}
-        release_name: ${{ steps.latest_commit.outputs.latest_commit }}
-        draft: true
+        release_name: Release ${{ steps.latest_commit.outputs.latest_commit }}
+        draft: false
 
     - name: Upload Release Asset
       id: upload-release-asset
