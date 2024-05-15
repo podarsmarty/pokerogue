@@ -434,29 +434,66 @@ export class SelfStatusMove extends Move {
   }
 }
 
+/** 
+ * Base class defining all {@link Move} Attributes 
+ * @abstract
+ */
 export abstract class MoveAttr {
+  /** Should this {@link Move} target the user? */
   public selfTarget: boolean;
 
   constructor(selfTarget: boolean = false) {
     this.selfTarget = selfTarget;
   }
 
+  /**
+   * Applies move attributes
+   * @see {@link applyMoveAttrsInternal}
+   * @virtual
+   * @param user The {@link Pokemon} using the move
+   * @param target The target {@link Pokemon} of the move
+   * @param move The {@link Move} being used
+   * @param args Set of unique arguments needed by this attribute
+   * @returns true if the application succeeds
+   */
   apply(user: Pokemon, target: Pokemon, move: Move, args: any[]): boolean | Promise<boolean> {
     return true;
   }
 
+  /** 
+   * @virtual
+   * @returns the {@link MoveCondition} or {@link MoveConditionFunc} for this {@link Move}
+   */
   getCondition(): MoveCondition | MoveConditionFunc {
     return null;
   }
 
+  /**
+   * @virtual
+   * @param user The {@link Pokemon} using the move
+   * @param target The target {@link Pokemon} of the move
+   * @param move The {@link Move} being used 
+   * @param cancelled A {@link Utils.BooleanHolder} which stores if the move should fail
+   * @returns the string representing failure of this {@link Move}
+   */
   getFailedText(user: Pokemon, target: Pokemon, move: Move, cancelled: Utils.BooleanHolder): string | null {
     return null;
   }
 
+  /** 
+   * Used by the Enemy AI to rank an attack based on a given user
+   * @see {@link EnemyPokemon.getNextMove}
+   * @virtual
+   */
   getUserBenefitScore(user: Pokemon, target: Pokemon, move: Move): integer {
     return 0;
   }
 
+  /** 
+   * Used by the Enemy AI to rank an attack based on a given target
+   * @see {@link EnemyPokemon.getNextMove}
+   * @virtual
+   */
   getTargetBenefitScore(user: Pokemon, target: Pokemon, move: Move): integer {
     return 0;
   }
@@ -470,6 +507,9 @@ export enum MoveEffectTrigger {
   POST_TARGET,
 }
 
+/** Base class defining all Move Effect Attributes
+ * @extends MoveAttr
+ */
 export class MoveEffectAttr extends MoveAttr {
   public trigger: MoveEffectTrigger;
   public firstHitOnly: boolean;
@@ -480,11 +520,21 @@ export class MoveEffectAttr extends MoveAttr {
     this.firstHitOnly = firstHitOnly;
   }
 
+  /**
+   * Determines whether the {@link Move}'s effects are valid to {@link apply}
+   * @virtual
+   * @param user The {@link Pokemon} using the move
+   * @param target The target {@link Pokemon} of the move
+   * @param move The {@link Move} being used
+   * @param args Set of unique arguments needed by this attribute
+   * @returns true if the application succeeds
+   */
   canApply(user: Pokemon, target: Pokemon, move: Move, args: any[]) {
     return !!(this.selfTarget ? user.hp && !user.getTag(BattlerTagType.FRENZY) : target.hp)
       && (this.selfTarget || !target.getTag(BattlerTagType.PROTECTED) || move.hasFlag(MoveFlags.IGNORE_PROTECT));
   }
 
+  /** Applies move effects so long as they are able based on {@link canApply} */
   apply(user: Pokemon, target: Pokemon, move: Move, args: any[]): boolean | Promise<boolean> {
     return this.canApply(user, target, move, args); 
   }
@@ -806,8 +856,15 @@ export enum MultiHitType {
   _1_TO_10,
 }
 
+/**
+ * Heals the user or target by {@link healRatio} depending on the value of {@link selfTarget}
+ * @extends MoveEffectAttr
+ * @see {@link apply}
+ */
 export class HealAttr extends MoveEffectAttr {
+  /** The percentage of {@link Stat.HP} to heal */
   private healRatio: number;
+  /** Should an animation be shown? */
   private showAnim: boolean;
 
   constructor(healRatio?: number, showAnim?: boolean, selfTarget?: boolean) {
@@ -822,6 +879,10 @@ export class HealAttr extends MoveEffectAttr {
     return true;
   }
 
+  /** 
+   * Creates a new {@link PokemonHealPhase}.
+   * This heals the target and shows the appropriate message.
+   */
   addHealPhase(target: Pokemon, healRatio: number) {
     target.scene.unshiftPhase(new PokemonHealPhase(target.scene, target.getBattlerIndex(),
       Math.max(Math.floor(target.getMaxHp() * healRatio), 1), getPokemonMessage(target, ' \nhad its HP restored.'), true, !this.showAnim));
@@ -903,7 +964,7 @@ export class IgnoreWeatherTypeDebuffAttr extends MoveAttr {
    * @param user Pokemon that used the move
    * @param target N/A
    * @param move Move with this attribute
-   * @param args Utils.NumberHolder for arenaAttackTypeMultiplier
+   * @param args [0] Utils.NumberHolder for arenaAttackTypeMultiplier
    * @returns true if the function succeeds
    */
   apply(user: Pokemon, target: Pokemon, move: Move, args: any[]): boolean {
@@ -963,27 +1024,19 @@ export class SandHealAttr extends WeatherHealAttr {
 }
 
 /**
- * Heals the target by either {@link normalHealRatio} or {@link boostedHealRatio} 
+ * Heals the target or the user by either {@link normalHealRatio} or {@link boostedHealRatio} 
  * depending on the evaluation of {@link condition}
+ * @extends HealAttr
  * @see {@link apply}
- * @param user The Pokemon using this move
- * @param target The target Pokemon of this move
- * @param move This move
- * @param args N/A
- * @returns if the move was successful
  */
 export class BoostHealAttr extends HealAttr {
+  /** Healing received when {@link condition} is false */
   private normalHealRatio?: number;
+  /** Healing received when {@link condition} is true */
   private boostedHealRatio?: number;
+  /** The lambda expression to check against when boosting the healing value */
   private condition?: MoveConditionFunc;
 
-  /** 
-   * @param normalHealRatio Healing received when {@link condition} is false
-   * @param boostedHealRatio Healing received when {@link condition} is true
-   * @param showAnim Should a healing animation be showed?
-   * @param selfTarget Should the move target the user?
-   * @param condition The condition to check against when boosting the healing value
-   */
   constructor(normalHealRatio?: number, boostedHealRatio?: number, showAnim?: boolean, selfTarget?: boolean, condition?: MoveConditionFunc) {
     super(normalHealRatio, showAnim, selfTarget);
     this.normalHealRatio = normalHealRatio;
@@ -991,6 +1044,13 @@ export class BoostHealAttr extends HealAttr {
     this.condition = condition;
   }
 
+  /**
+   * @param user The Pokemon using this move
+   * @param target The target Pokemon of this move
+   * @param move This move
+   * @param args N/A
+   * @returns true if the move was successful
+   */
   apply(user: Pokemon, target: Pokemon, move: Move, args: any[]): boolean {
     const healRatio = this.condition(user, target, move) ? this.boostedHealRatio : this.normalHealRatio;
     this.addHealPhase(target, healRatio);
@@ -1156,13 +1216,13 @@ export class StatusEffectAttr extends MoveEffectAttr {
           return false;
       }
       if (!pokemon.status || (pokemon.status.effect === this.effect && move.chance < 0))
-        return pokemon.trySetStatus(this.effect, true, this.cureTurn);
+        return pokemon.trySetStatus(this.effect, true, user, this.cureTurn);
     }
     return false;
   }
 
   getTargetBenefitScore(user: Pokemon, target: Pokemon, move: Move): number {
-    return !(this.selfTarget ? user : target).status && (this.selfTarget ? user : target).canSetStatus(this.effect, true) ? Math.floor(move.chance * -0.1) : 0;
+    return !(this.selfTarget ? user : target).status && (this.selfTarget ? user : target).canSetStatus(this.effect, true, false, user) ? Math.floor(move.chance * -0.1) : 0;
   }
 }
 
@@ -1181,7 +1241,7 @@ export class MultiStatusEffectAttr extends StatusEffectAttr {
   }
 
   getTargetBenefitScore(user: Pokemon, target: Pokemon, move: Move): number {
-    return !(this.selfTarget ? user : target).status && (this.selfTarget ? user : target).canSetStatus(this.effect, true) ? Math.floor(move.chance * -0.1) : 0;
+    return !(this.selfTarget ? user : target).status && (this.selfTarget ? user : target).canSetStatus(this.effect, true, false, user) ? Math.floor(move.chance * -0.1) : 0;
   }
 }
 
@@ -1197,7 +1257,7 @@ export class PsychoShiftEffectAttr extends MoveEffectAttr {
       return false;
     }
     if (!target.status || (target.status.effect === statusToApply && move.chance < 0)) {
-      var statusAfflictResult = target.trySetStatus(statusToApply, true);
+      var statusAfflictResult = target.trySetStatus(statusToApply, true, user);
       if (statusAfflictResult) {
         user.scene.queueMessage(getPokemonMessage(user, getStatusEffectHealText(user.status.effect)));
         user.resetStatus();
@@ -1210,7 +1270,7 @@ export class PsychoShiftEffectAttr extends MoveEffectAttr {
   }
 
   getTargetBenefitScore(user: Pokemon, target: Pokemon, move: Move): number {
-    return !(this.selfTarget ? user : target).status && (this.selfTarget ? user : target).canSetStatus(user.status?.effect, true) ? Math.floor(move.chance * -0.1) : 0;
+    return !(this.selfTarget ? user : target).status && (this.selfTarget ? user : target).canSetStatus(user.status?.effect, true, false, user) ? Math.floor(move.chance * -0.1) : 0;
   }
 }
 
@@ -2676,6 +2736,24 @@ export class WaterSuperEffectTypeMultiplierAttr extends VariableMoveTypeMultipli
   }
 }
 
+export class IceNoEffectTypeAttr extends VariableMoveTypeMultiplierAttr {
+  /**
+   * Checks to see if the Target is Ice-Type or not. If so, the move will have no effect.
+   * @param {Pokemon} user N/A
+   * @param {Pokemon} target Pokemon that is being checked whether Ice-Type or not.
+   * @param {Move} move N/A
+   * @param {any[]} args Sets to false if the target is Ice-Type, so it should do no damage/no effect.
+   * @returns {boolean} Returns true if move is successful, false if Ice-Type.
+   */
+   apply(user: Pokemon, target: Pokemon, move: Move, args: any[]): boolean {
+    if (target.isOfType(Type.ICE)) {
+      (args[0] as Utils.BooleanHolder).value = false;
+      return false;
+    }
+    return true;
+  }
+}
+
 export class FlyingTypeMultiplierAttr extends VariableMoveTypeMultiplierAttr {
   apply(user: Pokemon, target: Pokemon, move: Move, args: any[]): boolean {
     const multiplier = args[0] as Utils.NumberHolder;
@@ -2691,6 +2769,29 @@ export class OneHitKOAccuracyAttr extends VariableAccuracyAttr {
       accuracy.value = 0;
     else
       accuracy.value = Math.min(Math.max(30 + 100 * (1 - target.level / user.level), 0), 100);
+    return true;
+  }
+}
+
+export class SheerColdAccuracyAttr extends OneHitKOAccuracyAttr {
+  /**
+   * Changes the normal One Hit KO Accuracy Attr to implement the Gen VII changes, 
+   * where if the user is Ice-Type, it has more accuracy.
+   * @param {Pokemon} user Pokemon that is using the move; checks the Pokemon's level.
+   * @param {Pokemon} target Pokemon that is receiving the move; checks the Pokemon's level.
+   * @param {Move} move N/A 
+   * @param {any[]} args Uses the accuracy argument, allowing to change it from either 0 if it doesn't pass
+   * the first if/else, or 30/20 depending on the type of the user Pokemon.
+   * @returns Returns true if move is successful, false if misses.
+   */
+  apply(user: Pokemon, target: Pokemon, move: Move, args: any[]): boolean {
+    const accuracy = args[0] as Utils.NumberHolder;
+      if (user.level < target.level) {
+          accuracy.value = 0;
+      } else { 
+         const baseAccuracy = user.isOfType(Type.ICE) ? 30 : 20;
+         accuracy.value = Math.min(Math.max(baseAccuracy + 100 * (1 - target.level / user.level), 0), 100);
+      }
     return true;
   }
 }
@@ -5095,9 +5196,10 @@ export function initMoves() {
     new AttackMove(Moves.SAND_TOMB, Type.GROUND, MoveCategory.PHYSICAL, 35, 85, 15, 100, 0, 3)
       .attr(TrapAttr, BattlerTagType.SAND_TOMB)
       .makesContact(false),
-    new AttackMove(Moves.SHEER_COLD, Type.ICE, MoveCategory.SPECIAL, 200, 30, 5, -1, 0, 3)
+    new AttackMove(Moves.SHEER_COLD, Type.ICE, MoveCategory.SPECIAL, 200, 20, 5, -1, 0, 3)
+      .attr(IceNoEffectTypeAttr)
       .attr(OneHitKOAttr)
-      .attr(OneHitKOAccuracyAttr),
+      .attr(SheerColdAccuracyAttr),
     new AttackMove(Moves.MUDDY_WATER, Type.WATER, MoveCategory.SPECIAL, 90, 85, 10, 30, 0, 3)
       .attr(StatChangeAttr, BattleStat.ACC, -1)
       .target(MoveTarget.ALL_NEAR_ENEMIES),
@@ -5226,7 +5328,7 @@ export function initMoves() {
         || user.status?.effect === StatusEffect.TOXIC
         || user.status?.effect === StatusEffect.PARALYSIS
         || user.status?.effect === StatusEffect.SLEEP)
-        && target.canSetStatus(user.status?.effect)
+        && target.canSetStatus(user.status?.effect, false, false, user)
         ),
     new AttackMove(Moves.TRUMP_CARD, Type.NORMAL, MoveCategory.SPECIAL, -1, -1, 5, -1, 0, 4)
       .makesContact()
