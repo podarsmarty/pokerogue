@@ -26,8 +26,8 @@ jobs:
         latest_commit=$(git log --pretty=format:'%h' -n 1)
         echo "::set-output name=latest_commit::$latest_commit"
 
-    - name: Get current draft release
-      id: get_draft_release
+    - name: Get current release
+      id: get_release
       run: |
         response=$(curl -s -H "Authorization: token $RELEASE_TOKEN" "https://api.github.com/repos/Admiral-Billy/pokerogue/releases?per_page=1&draft=true")
         current_release=$(echo "$response" | jq -r '.[0].name')
@@ -37,8 +37,8 @@ jobs:
       id: check_match
       run: |
         latest_commit="${{ steps.latest_commit.outputs.latest_commit }}"
-        current_release="${{ steps.get_draft_release.outputs.current_release }}"
-        if [ "$latest_commit" == "$current_release" ]; then
+        current_release="${{ steps.get_release.outputs.current_release }}"
+        if [ "Release $latest_commit" == "$current_release" ]; then
           echo "::set-output name=stop_build::true"
         else
           echo "::set-output name=stop_build::false"
