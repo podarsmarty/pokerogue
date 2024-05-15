@@ -27,7 +27,6 @@ jobs:
       id: get_draft_release
       run: |
         response=$(curl -s -H "Authorization: token $RELEASE_TOKEN" "https://api.github.com/repos/Admiral-Billy/pokerogue/releases?per_page=1&draft=true")
-        echo "Response from API: $response"
         current_release=$(echo "$response" | jq -r '.[0].name')
         echo "::set-output name=current_release::$current_release"
 
@@ -45,12 +44,6 @@ jobs:
     - name: Stop if latest commit matches current draft release
       if: steps.check_match.outputs.stop_build == 'true'
       run: exit 0
-
-    - name: Set release name
-      id: set_release_name
-      run: |
-        latest_commit="${{ steps.latest_commit.outputs.latest_commit }}"
-        echo "::set-output name=release_name::$latest_commit"
 
     - name: Modify src/battle-scene.ts
       run: |
@@ -76,20 +69,15 @@ jobs:
         cd dist
         zip -r game.zip .
 
-    - name: Get current timestamp
-      id: timestamp
-      run: echo "::set-output name=timestamp::$(date +%Y%m%d%H%M%S)"
-
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       with:
-        tag_name: release-${{ steps.timestamp.outputs.timestamp }}
-        release_name: ${{ steps.set_release_name.outputs.release_name }}
+        tag_name: ${{ steps.latest_commit.outputs.latest_commit }}
+        release_name: ${{ steps.latest_commit.outputs.latest_commit }}
         draft: true
-        prerelease: true
 
     - name: Upload Release Asset
       id: upload-release-asset
@@ -101,3 +89,11 @@ jobs:
         asset_path: ./dist/game.zip
         asset_name: game.zip
         asset_content_type: application/zip
+
+    - name: Delete old releases
+      uses: dev-drprasad/delete-older-releases@v0.2.0
+      with:
+        keep_latest: 1
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
