@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  check-version:
     runs-on: ubuntu-latest
 
     env:
@@ -44,10 +44,12 @@ jobs:
           echo "::set-output name=stop_build::false"
         fi
 
-    - name: Stop if latest commit matches current draft release
-      if: steps.check_match.outputs.stop_build == 'true'
-      run: exit 0
-
+  build:
+    runs-on: ubuntu-latest
+    needs: check-version
+    if: ${{ needs.check-versions.outputs.stop_build != 'true' }}
+    
+    steps:
     - name: Modify src/battle-scene.ts
       run: |
         sed -i 's/export const bypassLogin = import.meta.env.VITE_BYPASS_LOGIN === "1";/export const bypassLogin = true;/' src/battle-scene.ts
