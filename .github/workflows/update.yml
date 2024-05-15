@@ -38,6 +38,8 @@ jobs:
       run: |
         latest_commit="${{ steps.latest_commit.outputs.latest_commit }}"
         current_release="${{ steps.get_release.outputs.current_release }}"
+        echo "Latest commit: $latest_commit"
+        echo "Current release: $current_release"
         if [ "$latest_commit" == "$current_release" ]; then
           echo "::set-output name=stop_build::true"
         else
