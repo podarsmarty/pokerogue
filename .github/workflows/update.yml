@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-main:
     runs-on: ubuntu-latest
 
     env:
@@ -100,8 +100,43 @@ jobs:
         asset_name: game.zip
         asset_content_type: application/zip
 
+    - name: Checkout Futabas repository
+      uses: actions/checkout@v4
+      with:
+        repository: skrftb/pokerogue-debug
+        ref: main
+     
+    - name: Package game
+      run: |
+        cd game
+        zip -r game_futaba_mod.zip .
+
+    - name: Gets latest created release info
+      id: latest_release_info
+      uses: jossef/action-latest-release-info@v1.2.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+    - name: Delete old release assets
+      uses: mknejp/delete-release-assets@v1
+      with:
+        token: ${{ secrets.RELEASE_TOKEN }}
+        tag: "release-${{ steps.get_release.outputs.current_release }}"
+        assets: game_futaba_mod.zip
+        
+    - name: Upload Futabas Release Asset
+      id: upload-release-asset-2
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      with:
+        upload_url: ${{ steps.latest_release_info.outputs.upload_url }}
+        asset_path: ./game/game_futaba_mod.zip
+        asset_name: game_futaba_mod.zip
+        asset_content_type: application/zip
+
     - name: Delete old releases
-      if: steps.check_match.outputs.stop_build != 'true'
+      if: needs.build-main.outputs.stop_build != 'true'
       uses: dev-drprasad/delete-older-releases@v0.3.3
       with:
         keep_latest: 1
