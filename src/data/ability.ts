@@ -9,7 +9,7 @@ import { BattlerTag } from "./battler-tags";
 import { BattlerTagType } from "./enums/battler-tag-type";
 import { StatusEffect, getStatusEffectDescriptor, getStatusEffectHealText } from "./status-effect";
 import { Gender } from "./gender";
-import Move, { AttackMove, MoveCategory, MoveFlags, MoveTarget, RecoilAttr, StatusMoveTypeImmunityAttr, FlinchAttr, OneHitKOAttr, HitHealAttr, StrengthSapHealAttr, allMoves, StatusMove, VariablePowerAttr, applyMoveAttrs } from "./move";
+import Move, { AttackMove, MoveCategory, MoveFlags, MoveTarget, RecoilAttr, StatusMoveTypeImmunityAttr, FlinchAttr, OneHitKOAttr, HitHealAttr, StrengthSapHealAttr, allMoves, StatusMove, VariablePowerAttr, applyMoveAttrs, IncrementMovePriorityAttr  } from "./move";
 import { ArenaTagSide, ArenaTrapTag } from "./arena-tag";
 import { ArenaTagType } from "./enums/arena-tag-type";
 import { Stat } from "./pokemon-stat";
@@ -491,8 +491,13 @@ export class PostDefendFormChangeAbAttr extends PostDefendAbAttr {
 export class FieldPriorityMoveImmunityAbAttr extends PreDefendAbAttr {
   applyPreDefend(pokemon: Pokemon, passive: boolean, attacker: Pokemon, move: PokemonMove, cancelled: Utils.BooleanHolder, args: any[]): boolean {
       const attackPriority = new Utils.IntegerHolder(move.getMove().priority);
+      applyMoveAttrs(IncrementMovePriorityAttr,attacker,null,move.getMove(),attackPriority);
       applyAbAttrs(IncrementMovePriorityAbAttr, attacker, null, move.getMove(), attackPriority);
   
+      if(move.getMove().moveTarget===MoveTarget.USER) {
+        return false;
+      }
+
       if(attackPriority.value > 0 && !move.getMove().isMultiTarget()) {
         cancelled.value = true;
         return true;
@@ -2277,6 +2282,34 @@ export class PostTurnFormChangeAbAttr extends PostTurnAbAttr {
   }
 }
 
+
+/**
+ * Attribute used for abilities (Bad Dreams) that damages the opponents for being asleep
+ */
+export class PostTurnHurtIfSleepingAbAttr extends PostTurnAbAttr {
+
+  /**
+   * Deals damage to all sleeping opponents equal to 1/8 of their max hp (min 1)
+   * @param {Pokemon} pokemon Pokemon that has this ability 
+   * @param {boolean} passive N/A
+   * @param {any[]} args N/A
+   * @returns {boolean} true if any opponents are sleeping
+   */
+  applyPostTurn(pokemon: Pokemon, passive: boolean, args: any[]): boolean | Promise<boolean> {
+    let hadEffect: boolean = false;
+    for(let opp of pokemon.getOpponents()) {
+      if(opp.status !== undefined && opp.status.effect === StatusEffect.SLEEP) {
+        opp.damageAndUpdate(Math.floor(Math.max(1, opp.getMaxHp() / 8)), HitResult.OTHER);
+        pokemon.scene.queueMessage(i18next.t('abilityTriggers:badDreams', {pokemonName: `${getPokemonPrefix(opp)}${opp.name}`}));
+        hadEffect = true;
+      }
+    
+    }
+    return hadEffect;
+  }
+}
+
+
 /** 
  * Grabs the last failed Pokeball used 
  * @extends PostTurnAbAttr 
@@ -3322,7 +3355,7 @@ export function initAbilities() {
       .ignorable()
       .partial(),
     new Ability(Abilities.BAD_DREAMS, 4)
-      .unimplemented(),
+      .attr(PostTurnHurtIfSleepingAbAttr),
     new Ability(Abilities.PICKPOCKET, 5)
       .attr(PostDefendStealHeldItemAbAttr, (target, user, move) => move.hasFlag(MoveFlags.MAKES_CONTACT)),
     new Ability(Abilities.SHEER_FORCE, 5)
