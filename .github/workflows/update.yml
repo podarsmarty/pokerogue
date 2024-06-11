@@ -154,7 +154,7 @@ jobs:
         assets: kanto_version.zip
         
     - name: Upload Kanto Release Asset
-      id: upload-release-asset-2
+      id: upload-release-asset-3
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
