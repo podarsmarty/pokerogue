@@ -146,12 +146,12 @@ jobs:
         cd game
         zip -r kanto_version.zip .
 
-    - name: Delete old release assets
-      uses: mknejp/delete-release-assets@v1
-      with:
-        token: ${{ secrets.RELEASE_TOKEN }}
-        tag: "release-${{ steps.get_release.outputs.current_release }}"
-        assets: kanto_version.zip
+    # - name: Delete old release assets
+    #   uses: mknejp/delete-release-assets@v1
+    #   with:
+    #     token: ${{ secrets.RELEASE_TOKEN }}
+    #     tag: "release-${{ steps.get_release.outputs.current_release }}"
+    #     assets: kanto_version.zip
         
     - name: Upload Kanto Release Asset
       id: upload-release-asset-3
