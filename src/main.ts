@@ -5,7 +5,6 @@ import { version } from "../package.json";
 import UIPlugin from "phaser3-rex-plugins/templates/ui/ui-plugin";
 import BBCodeTextPlugin from "phaser3-rex-plugins/plugins/bbcodetext-plugin";
 import InputTextPlugin from "phaser3-rex-plugins/plugins/inputtext-plugin.js";
-import BBCodeText from "phaser3-rex-plugins/plugins/bbcodetext";
 import TransitionImagePackPlugin from "phaser3-rex-plugins/templates/transitionimagepack/transitionimagepack-plugin.js";
 import { LoadingScene } from "./loading-scene";
 
@@ -72,15 +71,13 @@ const config: Phaser.Types.Core.GameConfig = {
   version: version
 };
 
-const setPositionRelative = function (guideObject: any, x: number, y: number) {
-  if (guideObject && guideObject instanceof Phaser.GameObjects.GameObject) {
-    const offsetX = guideObject.width * (-0.5 + (0.5 - guideObject.originX));
-    const offsetY = guideObject.height * (-0.5 + (0.5 - guideObject.originY));
-    this.setPosition(guideObject.x + offsetX + x, guideObject.y + offsetY + y);
-    return;
-  }
-
-  this.setPosition(x, y);
+/**
+ * Sets this object's position relative to another object with a given offset
+ */
+const setPositionRelative = function (guideObject: Phaser.GameObjects.GameObject, x: number, y: number) {
+  const offsetX = guideObject.width * (-0.5 + (0.5 - guideObject.originX));
+  const offsetY = guideObject.height * (-0.5 + (0.5 - guideObject.originY));
+  this.setPosition(guideObject.x + offsetX + x, guideObject.y + offsetY + y);
 };
 
 Phaser.GameObjects.Container.prototype.setPositionRelative = setPositionRelative;
@@ -88,7 +85,6 @@ Phaser.GameObjects.Sprite.prototype.setPositionRelative = setPositionRelative;
 Phaser.GameObjects.Image.prototype.setPositionRelative = setPositionRelative;
 Phaser.GameObjects.NineSlice.prototype.setPositionRelative = setPositionRelative;
 Phaser.GameObjects.Text.prototype.setPositionRelative = setPositionRelative;
-BBCodeText.prototype.setPositionRelative = setPositionRelative;
 Phaser.GameObjects.Rectangle.prototype.setPositionRelative = setPositionRelative;
 
 document.fonts.load("16px emerald").then(() => document.fonts.load("10px pkmnems"));
