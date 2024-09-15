@@ -30,6 +30,7 @@ export default defineConfig(({mode}) => {
 
 	return ({
 		...defaultConfig,
+		base: '',
 		esbuild: {
 			pure: mode === 'production' ? ['console.log'] : [],
 			keepNames: true,
