@@ -162,15 +162,30 @@ jobs:
         cd dist
         zip -r game_beta.zip .
 
-    - name: Upload Release Asset
+    - name: Gets latest created release info
       if: steps.check_match2.outputs.stop_build2 != 'true'
-      id: upload-release-asset2
+      id: latest_release_info_beta
+      uses: jossef/action-latest-release-info@v1.2.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+    - name: Delete old release assets
+      if: steps.check_match2.outputs.stop_build2 != 'true'
+      uses: mknejp/delete-release-assets@v1
+      with:
+        token: ${{ secrets.RELEASE_TOKEN }}
+        tag: "release-${{ steps.get_release2.outputs.current_release2 }}"
+        assets: game_beta.zip
+        
+    - name: Upload Beta Release Asset
+      if: steps.check_match2.outputs.stop_build2 != 'true'
+      id: upload-release-asset-beta
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/game_beta.zip
+        upload_url: ${{ steps.latest_release_info_beta.outputs.upload_url }}
+        asset_path: ./game/game_beta.zip
         asset_name: game_beta.zip
         asset_content_type: application/zip
 
