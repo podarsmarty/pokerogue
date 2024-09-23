@@ -185,7 +185,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       with:
         upload_url: ${{ steps.latest_release_info_beta.outputs.upload_url }}
-        asset_path: ./game/game_beta.zip
+        asset_path: ./dist/game_beta.zip
         asset_name: game_beta.zip
         asset_content_type: application/zip
 
