@@ -45,11 +45,6 @@ jobs:
         else
           echo "::set-output name=stop_build::false"
         fi
-        
-    - name: Modify src/battle-scene.ts
-      if: steps.check_match.outputs.stop_build != 'true'
-      run: |
-        sed -i 's/export const bypassLogin = import.meta.env.VITE_BYPASS_LOGIN === "1";/export const bypassLogin = true;/' src/battle-scene.ts
 
     - name: Set up Node.js
       if: steps.check_match.outputs.stop_build != 'true'
@@ -63,7 +58,7 @@ jobs:
 
     - name: Build game
       if: steps.check_match.outputs.stop_build != 'true'
-      run: npm run build
+      run: npm run build -- --mode development
 
     - name: Modify index.html
       if: steps.check_match.outputs.stop_build != 'true'
@@ -131,11 +126,6 @@ jobs:
         else
           echo "::set-output name=stop_build2::false"
         fi
-        
-    - name: Modify src/battle-scene.ts
-      if: steps.check_match2.outputs.stop_build2 != 'true'
-      run: |
-        sed -i 's/export const bypassLogin = import.meta.env.VITE_BYPASS_LOGIN === "1";/export const bypassLogin = true;/' src/battle-scene.ts
 
     - name: Set up Node.js
       if: steps.check_match2.outputs.stop_build2 != 'true'
@@ -149,12 +139,7 @@ jobs:
 
     - name: Build game
       if: steps.check_match2.outputs.stop_build2 != 'true'
-      run: npm run build
-
-    - name: Modify index.html
-      if: steps.check_match2.outputs.stop_build2 != 'true'
-      run: |
-        sed -i 's#/assets/index#./assets/index#g' dist/index.html
+      run: npm run build -- --mode development
 
     - name: Package game
       if: steps.check_match2.outputs.stop_build2 != 'true'
