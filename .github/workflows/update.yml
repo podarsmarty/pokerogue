@@ -96,76 +96,43 @@ jobs:
         repository: pagefaultgames/pokerogue
         ref: beta
 
-    - name: Get latest commit hash
-      id: latest_commit2
-      run: |
-        latest_commit2=$(git log --pretty=format:'%h' -n 1)
-        echo "::set-output name=latest_commit2::$latest_commit2"
-
-    - name: Get current release
-      id: get_release2
-      run: |
-        response=$(curl -s -H "Authorization: token $RELEASE_TOKEN" "https://api.github.com/repos/Admiral-Billy/pokerogue/releases?per_page=1&draft=true")
-        current_release2=$(echo "$response" | jq -r '.[0].name')
-        echo "::set-output name=current_release2::$current_release2"
-
-    - name: Check if latest commit matches current draft release
-      id: check_match2
-      run: |
-        latest_commit2="${{ steps.latest_commit2.outputs.latest_commit2 }}"
-        current_release2="${{ steps.get_release2.outputs.current_release2 }}"
-        echo "Latest commit: $latest_commit2"
-        echo "Current release: $current_release2"
-        if [ "$latest_commit2" == "$current_release2" ]; then
-          echo "::set-output name=stop_build2::true"
-        else
-          echo "::set-output name=stop_build2::false"
-        fi
-
     - name: Set up Node.js
-      if: steps.check_match2.outputs.stop_build2 != 'true'
       uses: actions/setup-node@v2
       with:
         node-version: '20.x'
 
     - name: Install dependencies
-      if: steps.check_match2.outputs.stop_build2 != 'true'
       run: npm install
 
     - name: Build game
-      if: steps.check_match2.outputs.stop_build2 != 'true'
       run: npm run build -- --mode development
 
     - name: Package game
-      if: steps.check_match2.outputs.stop_build2 != 'true'
       run: |
         cd dist
         zip -r game_beta.zip .
 
     - name: Gets latest created release info
-      if: steps.check_match2.outputs.stop_build2 != 'true'
-      id: latest_release_info_beta
+      id: latest_release_info
       uses: jossef/action-latest-release-info@v1.2.1
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
     - name: Delete old release assets
-      if: steps.check_match2.outputs.stop_build2 != 'true'
       uses: mknejp/delete-release-assets@v1
       with:
         token: ${{ secrets.RELEASE_TOKEN }}
-        tag: "release-${{ steps.get_release2.outputs.current_release2 }}"
+        tag: "release-${{ steps.get_release.outputs.current_release }}"
         assets: game_beta.zip
         fail-if-no-assets: false
         
     - name: Upload Beta Release Asset
-      if: steps.check_match2.outputs.stop_build2 != 'true'
       id: upload-release-asset-beta
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       with:
-        upload_url: ${{ steps.latest_release_info_beta.outputs.upload_url }}
+        upload_url: ${{ steps.latest_release_info.outputs.upload_url }}
         asset_path: ./dist/game_beta.zip
         asset_name: game_beta.zip
         asset_content_type: application/zip
@@ -180,12 +147,6 @@ jobs:
       run: |
         cd game
         zip -r game_futaba_mod.zip .
-
-    - name: Gets latest created release info
-      id: latest_release_info
-      uses: jossef/action-latest-release-info@v1.2.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
     - name: Delete old release assets
       uses: mknejp/delete-release-assets@v1
