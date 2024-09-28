@@ -156,6 +156,7 @@ jobs:
         token: ${{ secrets.RELEASE_TOKEN }}
         tag: "release-${{ steps.get_release2.outputs.current_release2 }}"
         assets: game_beta.zip
+        fail-if-no-assets: false
         
     - name: Upload Beta Release Asset
       if: steps.check_match2.outputs.stop_build2 != 'true'
@@ -192,6 +193,7 @@ jobs:
         token: ${{ secrets.RELEASE_TOKEN }}
         tag: "release-${{ steps.get_release.outputs.current_release }}"
         assets: game_futaba_mod.zip
+        fail-if-no-assets: false
         
     - name: Upload Futabas Release Asset
       id: upload-release-asset-2
@@ -221,6 +223,7 @@ jobs:
         token: ${{ secrets.RELEASE_TOKEN }}
         tag: "release-${{ steps.get_release.outputs.current_release }}"
         assets: kanto_version.zip
+        fail-if-no-assets: false
         
     - name: Upload Kanto Release Asset
       id: upload-release-asset-3
